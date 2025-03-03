@@ -1,35 +1,54 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import MovieList from './components/MovieList/MovieList';
+import styles from './App.module.css';
+
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className={styles.app}>
+      <h1>Movies App</h1>
+      <MovieList />
+    </div>
+  );
 }
 
-export default App
+export default App;
+
+
+/* import { Component } from 'react';
+import { fetchMovies } from './api';
+import MoviesList from './components/MovieList/MovieList';
+import SearchBar from './components/SearchBar/SearchBar';
+
+class App extends Component {
+  state = {
+    movies: [],
+    isLoading: false,
+    error: null,
+  };
+
+  handleSearch = async (query) => {
+    this.state({ isLoading: true, error: null });
+
+    try {
+      const movies = await fetchMovies(query);
+      this.setState({ movies, isLoading: false });
+    } catch (err) {
+      this.setState({ error: 'Не удалось загрузить фильмы', isLoading: false });
+    }
+  };
+
+  render() {
+    const { movies, isLoading, error } = this.state;
+
+    return (
+      <div style={{ padding: '20px' }}>
+        <SearchBar onSearch={this.handleSearch()} />
+        {isLoading && <p>Загрузка...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <MoviesList movies={movies} />
+      </div>
+    );
+  }
+}
+
+export default App; */

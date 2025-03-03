@@ -1,0 +1,6 @@
+.app {
+  max-width: 1010px;
+  display: grid;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
