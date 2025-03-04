@@ -1,9 +1,9 @@
+import PropTypes from 'prop-types';
 import { Card, Button } from 'antd';
-import { format, parse, isValid } from 'date-fns';
+import { format, parse } from 'date-fns';
 import styles from './MovieCard.module.css';
 
 const MovieCard = ({ title, description, img, date }) => {
-  
   const dateObj = parse(date, 'yyyy-MM-dd', new Date());
   const releaseDate = date ? format(dateObj, 'MMMM d, yyyy') : 'Release date unknown';
   const posterUrl = img
@@ -28,6 +28,20 @@ const MovieCard = ({ title, description, img, date }) => {
       </div>
     </Card>
   );
+};
+
+
+MovieCard.propTypes = {
+  title: PropTypes.string.isRequired, 
+  description: PropTypes.string, 
+  img: PropTypes.string,
+  date: PropTypes.string, 
+};
+
+MovieCard.defaultProps = {
+  description: 'Описание отсутствует', 
+  img: '', 
+  date: '', 
 };
 
 export default MovieCard;

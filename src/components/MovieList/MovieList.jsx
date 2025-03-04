@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { Col, Row, Spin } from 'antd';
+import { Col, Row, Spin, Alert } from 'antd';
 import { fetchMovies } from '../../api';
 import MovieCard from '../MovieCard/MovieCard';
 
@@ -7,25 +7,45 @@ class MovieList extends Component {
   state = {
     movies: [],
     loading: true,
+    error: null,
+    networkError: false,
   };
 
   componentDidMount() {
     this.getMovies();
+    window.addEventListener('online', this.handleNetworkChange);
+    window.addEventListener('offline', this.handleNetworkChange);
   }
 
+  //Удаляем слушатели
+  componentWillUnmount() {
+    window.removeEventListener('online', this.handleNetworkChange);
+    window.removeEventListener('offline', this.handleNetworkChange);
+  }
+
+  handleNetworkChange = () => {
+    this.setState({ networkError: !navigator.onLine });
+  };
+
   getMovies = async () => {
+    if (!navigator.onLine) {
+      this.setState({ networkError: true, loading: false });
+      return;
+    }
+
     try {
-      const movies = await fetchMovies('return');
+      const movies = await fetchMovies('begin');
+
       // Проверяем, является ли результат массивом
       if (Array.isArray(movies)) {
-        this.setState({ movies, loading: false });
+        this.setState({ movies, loading: false, networkError: false });
       } else {
         console.error('Fetched data is not an array:', movies);
         this.setState({ loading: false });
       }
     } catch (error) {
       console.error('Error fetching movies:', error);
-      this.setState({ loading: false }); // Устанавливаем loading в false даже при ошибке
+      this.setState({ loading: false, error: error.message }); // Устанавливаем loading в false даже при ошибке
     }
   };
 
@@ -42,25 +62,50 @@ class MovieList extends Component {
   };
 
   render() {
-    const { movies, loading } = this.state;
-    console.log(movies);
+    const { movies, loading, networkError, error } = this.state;
 
     if (loading) {
-      return <Spin size="large" />;
+      return <Spin size="large" style={{ paddingTop: '30%' }} />;
+    }
+
+     if (error) {
+      return (
+        <Alert
+          message="Ошибка!"
+          description={error}
+          type="error"
+          showIcon
+        />
+      );
+    }
+
+    if (networkError) {
+      return (
+        <Alert
+          message="Ошибка сети"
+          description="Пожалуйста, проверьте ваше интернет-соединение."
+          type="error"
+          showIcon
+        />
+      );
     }
 
     return (
       <Row gutter={[0, 36]} justify={'space-between'}>
-        {Array.isArray(movies) && movies.length > 0 ? ( // Проверка на массив
+        {Array.isArray(movies) && movies.length > 0 ? ( 
           movies.map((movie) => (
             <Col span={10} key={movie.id}>
-              <MovieCard title={movie.title} description={this.truncateDescription(movie.overview)} 
-              img={movie.backdrop_path} date={movie.release_date}/>
+              <MovieCard
+                title={movie.title}
+                description={this.truncateDescription(movie.overview)}
+                img={movie.backdrop_path}
+                date={movie.release_date}
+              />
             </Col>
           ))
         ) : (
           <Col span={24}>
-            <h2>No movies found</h2>
+            <Alert message={'No movies found'} type="error" showIcon />
           </Col>
         )}
       </Row>
@@ -69,20 +114,3 @@ class MovieList extends Component {
 }
 
 export default MovieList;
-
-/* import { Row, Col } from 'antd';
-import MovieCard from './../MovieCard/MovieCard';
-
-const MovieList = ({ movies }) => {
-  return (
-    <Row gutter={[16, 16]}>
-      {movies.map((movie) => (
-        <Col key={movie.id} span={6}>
-          <MovieCard movie={movie} />
-        </Col>
-      ))}
-    </Row>
-  );
-};
-
-export default MovieList; */
