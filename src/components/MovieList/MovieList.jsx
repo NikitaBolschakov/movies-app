@@ -1,55 +1,70 @@
-import { Component } from 'react';
-import { Col, Row, Spin, Alert } from 'antd';
+import { useState, useCallback, useRef } from 'react';
+import { Input, Spin, Alert, Row, Col, Pagination } from 'antd';
+import { debounce } from 'lodash';
 import { fetchMovies } from '../../api';
 import MovieCard from '../MovieCard/MovieCard';
 
-class MovieList extends Component {
-  state = {
-    movies: [],
-    loading: true,
-    error: null,
-    networkError: false,
-  };
+const MovieList = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [networkError, setNetworkError] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  console.log(isLoading)
 
-  componentDidMount() {
-    this.getMovies();
-    window.addEventListener('online', this.handleNetworkChange);
-    window.addEventListener('offline', this.handleNetworkChange);
-  }
 
-  //Удаляем слушатели
-  componentWillUnmount() {
-    window.removeEventListener('online', this.handleNetworkChange);
-    window.removeEventListener('offline', this.handleNetworkChange);
-  }
+  const inputRef = useRef(null);
 
-  handleNetworkChange = () => {
-    this.setState({ networkError: !navigator.onLine });
-  };
+  const fetchMoviesWithDebounce = useCallback(
+    debounce(async (term, page) => {
+      
+      setIsLoading(true);
 
-  getMovies = async () => {
-    if (!navigator.onLine) {
-      this.setState({ networkError: true, loading: false });
-      return;
-    }
-
-    try {
-      const movies = await fetchMovies('begin');
-
-      // Проверяем, является ли результат массивом
-      if (Array.isArray(movies)) {
-        this.setState({ movies, loading: false, networkError: false });
-      } else {
-        console.error('Fetched data is not an array:', movies);
-        this.setState({ loading: false });
+      //если нет сети - ошибка сети
+      if (!navigator.onLine) {
+        setNetworkError(true);
+        setIsLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching movies:', error);
-      this.setState({ loading: false, error: error.message }); // Устанавливаем loading в false даже при ошибке
-    }
+      
+      try {
+        const response = await fetchMovies(term, page);
+        console.log(term, currentPage);
+        if (response.results) {
+          setMovies(response.results);
+          setTotalPages(response.total_pages);
+          setIsLoading(false);
+          setNetworkError(false);
+        } else {
+          console.error('Invalid response:', response);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Error fetching movies:', err);
+        setError(err.message);
+        setIsLoading(false);
+      }
+    }, 600),
+    []
+  );
+
+  const onSearchChange = (event) => {
+    const term = event.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    fetchMoviesWithDebounce(term);
+  };
+  
+  const handlePaginationChange = (pageNumber) => {
+    console.log(`pageNumber: ${pageNumber}`);
+    setCurrentPage(pageNumber);
+    console.log(`2 pageNumber: ${pageNumber}`);
+    fetchMoviesWithDebounce(searchTerm, pageNumber);
   };
 
-  truncateDescription = (description) => {
+  const truncateDescription = (description) => {
     if (description.length > 100) {
       const truncatedText = description.substring(0, 100);
       const lastSpaceIndex = truncatedText.lastIndexOf(' ');
@@ -61,56 +76,64 @@ class MovieList extends Component {
     return description;
   };
 
-  render() {
-    const { movies, loading, networkError, error } = this.state;
-
-    if (loading) {
-      return <Spin size="large" style={{ paddingTop: '30%' }} />;
-    }
-
-     if (error) {
-      return (
+  return (
+    <>
+      <Input
+        ref={inputRef}
+        placeholder="Type to search..."
+        value={searchTerm}
+        onChange={onSearchChange}
+        style={{ width: '100%', marginTop: '20px', marginBottom: '20px' }}
+      />
+      {isLoading ? (
+        <Spin size="large" style={{ paddingTop: '30%' }} />
+      ) : error ? (
         <Alert
           message="Ошибка!"
           description={error}
           type="error"
           showIcon
         />
-      );
-    }
-
-    if (networkError) {
-      return (
+      ) : networkError ? (
         <Alert
           message="Ошибка сети"
           description="Пожалуйста, проверьте ваше интернет-соединение."
           type="error"
           showIcon
         />
-      );
-    }
-
-    return (
-      <Row gutter={[0, 36]} justify={'space-between'}>
-        {Array.isArray(movies) && movies.length > 0 ? ( 
-          movies.map((movie) => (
-            <Col span={10} key={movie.id}>
-              <MovieCard
-                title={movie.title}
-                description={this.truncateDescription(movie.overview)}
-                img={movie.backdrop_path}
-                date={movie.release_date}
-              />
+      ) : (
+        <Row gutter={[230, 36]} >
+          {Array.isArray(movies) && movies.length > 0 ? (
+            movies.map((movie) => (
+              <Col span={10} key={movie.id}>
+                <MovieCard
+                  title={movie.title}
+                  description={truncateDescription(movie.overview)}
+                  img={movie.backdrop_path}
+                  date={movie.release_date}
+                />
+              </Col>
+            ))
+          ) : (
+            <Col span={24}>
+              <Alert message={'Фильмы не найдены'} type="info" showIcon />
             </Col>
-          ))
-        ) : (
-          <Col span={24}>
-            <Alert message={'No movies found'} type="error" showIcon />
-          </Col>
-        )}
-      </Row>
-    );
-  }
-}
+          )}
+        </Row>
+      )}
+      {!isLoading && totalPages > 1 && (
+        <Pagination
+          current={currentPage}
+          total={totalPages}
+          onChange={handlePaginationChange}
+          align={'center'}
+          defaultCurrent={1}
+          showSizeChanger={false}
+          style={{ textAlign: 'center', marginTop: '38px', marginBottom: '17px' }}
+        />
+      )}
+    </>
+  );
+};
 
 export default MovieList;
