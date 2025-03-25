@@ -1,0 +1,139 @@
+.customCard {
+  width: 451px;
+  height: 279px;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.cardContent {
+  display: flex;
+  height: 100%;
+}
+
+.cardImage {
+  width: 187px;
+  height: 279px;
+}
+
+.cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardBody {
+  flex: 1;
+  padding: 10px 20px 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.cardHeader {
+  margin: 0;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 400;
+  width: 190px;
+  line-height: 1.12;
+}
+
+.cardDate {
+  margin: 7px 0 9px;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 22px;
+  letter-spacing: 0px;
+  color: #827e7e;
+}
+
+.cardButtons {
+  display: flex;
+  gap: 8px;
+  min-height: 20px;
+}
+
+.cardButton {
+  height: 20px;
+  overflow: hidden;
+  padding: 0px 4px;
+}
+
+.cardButton span {
+  font-weight: 400;
+  font-size: 9px;
+  line-height: 14.52px;
+  letter-spacing: 0;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.cardDescription {
+  margin: 0;
+  margin-top: 10px;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 22px;
+  letter-spacing: 0px;
+}
+
+.ratingCircle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid rgba(233, 209, 0, 1);
+}
+
+.rate {
+  margin-top: auto;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .customCard {
+    width: 93vw;
+    height: 245px;
+  }
+
+  .cardImage {
+    width: 60px;
+    height: 91px;
+    margin: 6px 0 10px 10px;
+  }
+
+  .cardImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cardBody {
+    margin: 4px auto 7px 13px;
+    padding: 0;
+    height: 233px;
+  }
+
+  .cardDescription {
+    margin-top: 16px;
+    margin-left: -72px;
+  }
+
+  .rate {
+    margin-top: auto;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: 10px;
+  }
+}

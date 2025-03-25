@@ -1,0 +1,17 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+}
+
+.col {
+  width: 450px;
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 768px) {
+  .col {
+    flex: 1 1 100%; /* Одна колонка на всю ширину */
+    width: auto;
+  }
+}
