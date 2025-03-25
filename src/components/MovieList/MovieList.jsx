@@ -1,79 +1,35 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Input, Spin, Alert, Row, Col, Pagination } from 'antd';
-import { debounce } from 'lodash';
-import { fetchMovies } from '../../api';
+import PropTypes from 'prop-types';
 import MovieCard from '../MovieCard/MovieCard';
+import styles from './MovieList.module.css';
 
-const MovieList = () => {
+const MovieList = ({
+  sessionId,
+  onRateMovie,
+  isLoading,
+  error,
+  networkError,
+  movies,
+  totalPages,
+  fetchMoviesWithDebounce,
+  truncateDescription,
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [movies, setMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [networkError, setNetworkError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  console.log(isLoading)
-
 
   const inputRef = useRef(null);
-
-  const fetchMoviesWithDebounce = useCallback(
-    debounce(async (term, page) => {
-      
-      setIsLoading(true);
-
-      //если нет сети - ошибка сети
-      if (!navigator.onLine) {
-        setNetworkError(true);
-        setIsLoading(false);
-        return;
-      }
-      
-      try {
-        const response = await fetchMovies(term, page);
-        console.log(term, currentPage);
-        if (response.results) {
-          setMovies(response.results);
-          setTotalPages(response.total_pages);
-          setIsLoading(false);
-          setNetworkError(false);
-        } else {
-          console.error('Invalid response:', response);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error('Error fetching movies:', err);
-        setError(err.message);
-        setIsLoading(false);
-      }
-    }, 600),
-    []
-  );
 
   const onSearchChange = (event) => {
     const term = event.target.value;
     setSearchTerm(term);
     setCurrentPage(1);
-    fetchMoviesWithDebounce(term);
+    fetchMoviesWithDebounce(term, 1, sessionId);
   };
-  
-  const handlePaginationChange = (pageNumber) => {
-    console.log(`pageNumber: ${pageNumber}`);
+
+  const handlePaginationChange = async (pageNumber) => {
     setCurrentPage(pageNumber);
-    console.log(`2 pageNumber: ${pageNumber}`);
-    fetchMoviesWithDebounce(searchTerm, pageNumber);
-  };
-
-  const truncateDescription = (description) => {
-    if (description.length > 100) {
-      const truncatedText = description.substring(0, 100);
-      const lastSpaceIndex = truncatedText.lastIndexOf(' ');
-      const res = truncatedText.substring(0, lastSpaceIndex) + '...';
-
-      return res;
-    }
-
-    return description;
+    await fetchMoviesWithDebounce(searchTerm, pageNumber, sessionId);
   };
 
   return (
@@ -84,16 +40,14 @@ const MovieList = () => {
         value={searchTerm}
         onChange={onSearchChange}
         style={{ width: '100%', marginTop: '20px', marginBottom: '20px' }}
+        autoFocus
       />
       {isLoading ? (
         <Spin size="large" style={{ paddingTop: '30%' }} />
+      ) : !searchTerm ? (
+        <Alert message={'Введите название фильма'} type="info" />
       ) : error ? (
-        <Alert
-          message="Ошибка!"
-          description={error}
-          type="error"
-          showIcon
-        />
+        <Alert message="Ошибка!" description={error} type="error" showIcon />
       ) : networkError ? (
         <Alert
           message="Ошибка сети"
@@ -102,15 +56,23 @@ const MovieList = () => {
           showIcon
         />
       ) : (
-        <Row gutter={[230, 36]} >
+        <Row className={styles.row}>
           {Array.isArray(movies) && movies.length > 0 ? (
             movies.map((movie) => (
-              <Col span={10} key={movie.id}>
+              <Col key={movie.id} className={styles.col}>
                 <MovieCard
+                  className={styles.movieCard}
+                  sessionId={sessionId}
                   title={movie.title}
                   description={truncateDescription(movie.overview)}
                   img={movie.backdrop_path}
                   date={movie.release_date}
+                  id={movie.id}
+                  onRateMovie={onRateMovie}
+                  voteAverage={movie.vote_average}
+                  genreIds={movie.genre_ids}
+                  tabRated={false}
+                  localRating={movie.rating}
                 />
               </Col>
             ))
@@ -134,6 +96,27 @@ const MovieList = () => {
       )}
     </>
   );
+};
+
+MovieList.propTypes = {
+  sessionId: PropTypes.string.isRequired, // ID сессии
+  onRateMovie: PropTypes.func.isRequired, // Функция для обработки оценки фильма
+  isLoading: PropTypes.bool.isRequired, // Флаг загрузки
+  error: PropTypes.string, // Сообщение об ошибке
+  networkError: PropTypes.bool, // Флаг сетевой ошибки
+  movies: PropTypes.arrayOf(
+    // Массив фильмов
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      title: PropTypes.string.isRequired,
+      overview: PropTypes.string,
+      backdrop_path: PropTypes.string,
+      release_date: PropTypes.string,
+    })
+  ).isRequired,
+  totalPages: PropTypes.number.isRequired, // Общее количество страниц
+  fetchMoviesWithDebounce: PropTypes.func.isRequired, // Функция для поиска фильмов с дебаунсом
+  truncateDescription: PropTypes.func.isRequired,
 };
 
 export default MovieList;
