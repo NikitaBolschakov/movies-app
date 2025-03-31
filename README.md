@@ -1,8 +1,20 @@
-# React + Vite
+# Movie Search App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Необходим VPN! https://movies-app-iota-ashy.vercel.app/ 
 
-Currently, two official plugins are available:
+Приложение для поиска фильмов с использованием The Movie Database (TMDb) API.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Особенности
+
+- Поиск фильмов по названию
+- Просмотр деталей фильма
+- Возможность оценивать фильмы
+- Адаптивный интерфейс
+
+## 🛠 Технологии
+
+- React 18
+- Vite 
+- The Movie Database API
+- Ant Design 
+- Vercel (для деплоя)
