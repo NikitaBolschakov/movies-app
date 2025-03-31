@@ -18,3 +18,4 @@
 - The Movie Database API
 - Ant Design 
 - Vercel (для деплоя)
+

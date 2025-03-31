@@ -74,3 +74,20 @@ export const fetchRatedMovies = async (sessionId) => {
     return [];
   }
 };
+
+export const rateMovie = async (id, sessionId, value) => {
+  const options = {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'Content-Type': 'application/json;charset=utf-8',
+    },
+    body: JSON.stringify({ value }),
+  };
+
+  const response = await fetch(
+    `https://api.themoviedb.org/3/movie/${id}/rating?api_key=${import.meta.env.VITE_API_KEY}&guest_session_id=${sessionId}`,
+    options
+  );
+  if (!response.ok) throw new Error('Не удалось отправить рейтинг');
+};

@@ -1,8 +1,11 @@
 import { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Card, Button, Rate } from 'antd';
-import { format, parse } from 'date-fns';
+import { getRatingColor } from '../../utils/helpers';
+import { formatReleaseDate } from '../../utils/date';
+import { getPosterUrl } from '../../utils/images';
 import { GenresContext } from '../../contexts/genresContext';
+import { rateMovie } from '../../api';
 import styles from './MovieCard.module.css';
 
 const MovieCard = ({
@@ -20,64 +23,24 @@ const MovieCard = ({
   localRating,
 }) => {
   const [rating, setRating] = useState(0); // Состояние для хранения переданного рейтинга
+
   const ratingUser = localRating; // Загруженный рейтинг фильмов, которые пользователь уже оценил
   const genres = useContext(GenresContext); // Получаем список жанров из контекста
-
   // Функция для получения названий жанров по их ID
   const getGenres = (genreIds) => {
     return genreIds.map((id) => genres.find((genre) => genre.id === id)?.name).filter(Boolean);
   };
-
-  // Функция для определения цвета круга в зависимости от рейтинга
-  const getRatingColor = (voteAverage) => {
-    if (voteAverage >= 0 && voteAverage < 3) return '#E90000';
-    if (voteAverage >= 3 && voteAverage < 5) return '#E97E00';
-    if (voteAverage >= 5 && voteAverage < 7) return '#E9D100';
-    if (voteAverage >= 7) return '#66E900';
-    return '#E90000';
-  };
-
-  // Дата выхода фильма
-  let releaseDate = 'Release date unknown';
-  if (date) {
-    const dateObj = parse(date, 'yyyy-MM-dd', new Date());
-    releaseDate = format(dateObj, 'MMMM d, yyyy');
-  }
-
-  //Изображение для карточки
-  const posterUrl = img
-    ? `https://image.tmdb.org/t/p/w500${img}`
-    : 'https://imgholder.ru/183x281/8493a8/adb9ca&text=NO+IMAGE&font=kelson&fz=40';
+  const releaseDate = formatReleaseDate(date); // Дата выхода фильма
+  const posterUrl = getPosterUrl(img); // Получаем URL изображения для карточки
 
   // Отправка рейтинга
   const handleRatingChange = async (value) => {
     setRating(value);
-
     try {
-      const options = {
-        method: 'POST',
-        headers: {
-          accept: 'application/json',
-          'Content-Type': 'application/json;charset=utf-8',
-        },
-        body: JSON.stringify({ value }),
-      };
-
-      const response = await fetch(
-        `https://api.themoviedb.org/3/movie/${id}/rating?api_key=${import.meta.env.VITE_API_KEY}&guest_session_id=${sessionId}`,
-        options
-      );
-
-      if (!response.ok) {
-        throw new Error('Не удалось отправить рейтинг');
-      }
-
-      // Сохраняем оцененный фильм
+      await rateMovie(id, sessionId, value);
       onRateMovie({ id, title, description, rating: value, img, date, voteAverage, genreIds });
-
-      console.log('Рейтинг успешно отправлен!');
     } catch (error) {
-      console.log('Ошибка при отправке рейтинга: ' + error.message);
+      console.error('Ошибка при отправке рейтинга:', error);
     }
   };
 
